@@ -1,29 +1,19 @@
-Here’s a **step-by-step guide to install the latest Docker and Docker Compose** on a Linux system (Ubuntu/Debian). I’ll also mention steps for other OS if needed.
+✅ That’s totally fine — it just means **no old Docker version** is installed on your system yet, so you can safely continue.
+
+Now go ahead with the **next steps** in order 👇
 
 ---
 
-## **1️⃣ Uninstall old versions (if any)**
-
-```bash
-sudo apt-get remove docker docker-engine docker.io containerd runc
-```
-
----
-
-## **2️⃣ Update system packages**
+### **Step 2: Update system packages**
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release
+sudo apt-get install -y ca-certificates curl gnupg lsb-release
 ```
 
 ---
 
-## **3️⃣ Add Docker’s official GPG key**
+### **Step 3: Add Docker’s official GPG key**
 
 ```bash
 sudo mkdir -p /etc/apt/keyrings
@@ -32,17 +22,18 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o 
 
 ---
 
-## **4️⃣ Set up the Docker repository**
+### **Step 4: Set up the Docker repository**
 
 ```bash
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 ```
 
 ---
 
-## **5️⃣ Install Docker Engine**
+### **Step 5: Install Docker Engine and Docker Compose**
 
 ```bash
 sudo apt-get update
@@ -51,44 +42,28 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 
 ---
 
-## **6️⃣ Verify Docker installation**
+### **Step 6: Verify installation**
 
 ```bash
 docker --version
 docker compose version
 ```
 
-> Example output:
-> `Docker version 24.0.5, build b96c2c5`
-> `Docker Compose version v2.21.0`
-
 ---
 
-## **7️⃣ Start and enable Docker service**
+If you want to run Docker **without sudo**, also do:
 
 ```bash
-sudo systemctl start docker
-sudo systemctl enable docker
-sudo systemctl status docker
-```
-
----
-
-## **8️⃣ Optional: Run Docker without sudo**
-
-```bash
-sudo groupadd docker
 sudo usermod -aG docker $USER
 newgrp docker
+```
+
+Then test:
+
+```bash
 docker run hello-world
 ```
 
 ---
 
-✅ **Now you have the latest Docker + Docker Compose installed.**
-
----
-
-If you want, I can give a **one-liner command method that installs both latest Docker and Docker Compose automatically**, which is faster and works on Ubuntu/Debian.
-
-Do you want me to do that?
+Would you like me to give you the same **one-liner installation command** that installs all of these automatically (useful for quick setup in EC2)?
