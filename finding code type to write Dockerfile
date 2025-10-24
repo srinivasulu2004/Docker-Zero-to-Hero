@@ -104,7 +104,7 @@ File layout also gives big clues 👇
 
 | Framework              | Identify by           | Build Command       | Production Artifact Path      | Run/Serve With      |
 | ---------------------- | --------------------- | ------------------- | ----------------------------- | ------------------- |
-| **Node.js (Express)**  | `app.js`, `"express"` | `npm ci`            | Code itself (no build folder) | `node app.js`       |
+| **Node.js (Express)**  | `app.js`, `"express"` | `npm ci,npm install | Code itself (no build folder) | `node app.js`       |
 | **React (CRA)**        | `"react-scripts"`     | `npm run build`     | `/build`                      | `nginx`             |
 | **React (Vite)**       | `"vite"`              | `npm run build`     | `/dist`                       | `nginx`             |
 | **Angular**            | `"@angular/core"`     | `npm run build`     | `/dist/<project-name>`        | `nginx`             |
