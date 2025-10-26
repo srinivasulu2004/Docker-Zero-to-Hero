@@ -1,0 +1,153 @@
+🔥 Perfect — now you’re asking the **core DevOps question** every deployment engineer faces:
+
+> “Given a source code folder, how do I know what to install, how to build it, and where the build files go?”
+
+Let’s go **framework by framework** —
+✅ covering **frontend** + **backend** technologies,
+✅ including: **build commands**, **install commands**, and **build output paths** (the folder you copy in Docker/Nginx).
+
+---
+
+# ⚙️ FRONTEND TECHNOLOGIES
+
+| Framework / Tech             | Language                | Install Command               | Build Command                                                | Build Output Path            | Notes                                   |
+| ---------------------------- | ----------------------- | ----------------------------- | ------------------------------------------------------------ | ---------------------------- | --------------------------------------- |
+| **Angular**                  | TypeScript              | `npm ci` *(or `npm install`)* | `npm run build` or `npx ng build --configuration production` | `dist/<project-name>`        | Uses `angular.json`                     |
+| **React (Create React App)** | JavaScript              | `npm ci`                      | `npm run build` or `npx react-scripts build`                 | `build/`                     | Uses `react-scripts`                    |
+| **React (Vite)**             | JavaScript              | `npm ci`                      | `npm run build` or `npx vite build`                          | `dist/`                      | Look for `vite.config.js`               |
+| **Vue (Vue CLI)**            | JavaScript              | `npm ci`                      | `npm run build` or `npx vue-cli-service build`               | `dist/`                      | Has `vue.config.js`                     |
+| **Vue (Vite)**               | JavaScript              | `npm ci`                      | `npm run build` or `npx vite build`                          | `dist/`                      | Vite-based Vue                          |
+| **Next.js (React SSR)**      | JavaScript / TypeScript | `npm ci`                      | `npm run build` or `npx next build`                          | `.next/`  or . or ./out      | SSR framework                           |
+| **Nuxt.js (Vue SSR)**        | JavaScript              | `npm ci`                      | `npm run build` or `npx nuxt build`                          | `.nuxt/`                     | SSR for Vue                             |
+| **Svelte / SvelteKit**       | JavaScript              | `npm ci`                      | `npm run build` or `npx svelte-kit build`                    | `build/` or `.svelte-kit/`   | Depends on config                       |
+| **Vite (generic)**           | JS / TS                 | `npm ci`                      | `npm run build` or `npx vite build`                          | `dist/`                      | Fast build tool for modern apps         |
+| **Plain HTML/CSS/JS**        | JavaScript              | None                          | None                                                         | Root directory (e.g. `/app`) | No build step, directly copied to Nginx |
+
+---
+
+# ⚙️ BACKEND TECHNOLOGIES
+
+| Framework / Tech                      | Language                | Install Command                                 | Build / Run Command                                                        | Build Output / Run Path                   | Notes                             |
+| ------------------------------------- | ----------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------- | --------------------------------- |
+| **Node.js (Express / NestJS)**        | JavaScript / TypeScript | `npm ci`                                        | - JS: `npm start` or `node server.js`<br>- TS: `npm run build` (→ `/dist`) | `/dist` *(if TypeScript)* or project root | Most common backend               |
+| **Python (Flask / Django / FastAPI)** | Python                  | `pip install -r requirements.txt`               | `python app.py` or `gunicorn app:app`                                      | No build folder (runtime only)            | Use `requirements.txt`            |
+| **Java (Spring Boot)**                | Java                    | `mvn dependency:go-offline -B` or `mvn install` | `mvn clean package -DskipTests`                                            | `target/*.jar`                            | Output is a `.jar`                |
+| **Java (Gradle)**                     | Java                    | `gradle build --no-daemon`                      | `java -jar build/libs/*.jar`                                               | `build/libs/*.jar`                        | Used in modern Java               |
+| **.NET Core**                         | C#                      | `dotnet restore`                                | `dotnet build -c Release` or `dotnet publish -c Release -o out`            | `/out`                                    | Use SDK images                    |
+| **PHP (Laravel / Symfony)**           | PHP                     | `composer install`                              | No build, just `php artisan serve`                                         | `/` (root app)                            | Optional `composer dump-autoload` |
+| **Ruby on Rails**                     | Ruby                    | `bundle install`                                | `rails server`                                                             | `/` (runtime)                             | Gems in Gemfile                   |
+| **Go (Golang)**                       | Go                      | `go mod download`                               | `go build -o app`                                                          | `./app` binary                            | Fast static binary                |
+| **Rust**                              | Rust                    | `cargo build --release`                         | Run: `./target/release/<binary>`                                           | `/target/release/`                        | Compiled backend                  |
+| **Elixir (Phoenix)**                  | Elixir                  | `mix deps.get`                                  | `mix compile`                                                              | `_build/prod/`                            | For BE frameworks                 |
+
+---
+
+# 🧱  DOCKER BUILD EXAMPLES (By Language)
+
+### 🟢 **Angular**
+
+```dockerfile
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+FROM nginx:alpine
+COPY --from=build /app/dist/my-angular-app /usr/share/nginx/html
+```
+
+---
+
+### 🔵 **React**
+
+```dockerfile
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+```
+
+---
+
+### 🟣 **Node.js Backend**
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+CMD ["npm", "start"]
+```
+
+---
+
+### 🟠 **Python (Flask)**
+
+```dockerfile
+FROM python:3.11-alpine
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD ["python", "app.py"]
+```
+
+---
+
+### 🔴 **Java (Spring Boot)**
+
+```dockerfile
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY . .
+RUN mvn clean package -DskipTests
+FROM eclipse-temurin:17-jre-alpine
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+
+---
+
+### ⚪ **Go**
+
+```dockerfile
+FROM golang:1.21-alpine AS build
+WORKDIR /app
+COPY . .
+RUN go mod download
+RUN go build -o server
+FROM alpine
+COPY --from=build /app/server /server
+CMD ["/server"]
+```
+
+---
+
+# 🧠 How to Identify Automatically
+
+| File Found                         | Framework       | Install Command                   | Build Folder   |
+| ---------------------------------- | --------------- | --------------------------------- | -------------- |
+| `angular.json`                     | Angular         | `npm ci`                          | `dist/<app>`   |
+| `package.json` + `"react-scripts"` | React (CRA)     | `npm ci`                          | `build/`       |
+| `vite.config.js`                   | Vite            | `npm ci`                          | `dist/`        |
+| `next.config.js`                   | Next.js         | `npm ci`                          | `.next/`       |
+| `pom.xml`                          | Java (Maven)    | `mvn clean package`               | `target/`      |
+| `build.gradle`                     | Java (Gradle)   | `gradle build`                    | `build/libs/`  |
+| `requirements.txt`                 | Python          | `pip install -r requirements.txt` | Runtime only   |
+| `go.mod`                           | Go              | `go build`                        | Binary file    |
+| `composer.json`                    | PHP             | `composer install`                | Runtime only   |
+| `package.json` + `"express"`       | Node.js Backend | `npm ci`                          | `/dist` if TS  |
+| `Gemfile`                          | Ruby            | `bundle install`                  | Runtime only   |
+| `mix.exs`                          | Elixir          | `mix deps.get`                    | `_build/prod/` |
+
+---
+
+Would you like me to give you a **single auto-detect shell script (build.sh)** that checks the project type (Angular/React/Java/Python/etc.), runs the correct install + build command, and prints the output path — so Jenkins or Docker can use it automatically?
